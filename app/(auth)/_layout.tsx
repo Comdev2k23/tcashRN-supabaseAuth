@@ -1,23 +1,17 @@
 import { supabase } from '@/lib/Auth';
 import { Session } from '@supabase/supabase-js';
-import { Redirect, SplashScreen, Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import { Redirect, Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
-import SafeScreen from '../components/SafeAreaScreen';
 
-SplashScreen.preventAutoHideAsync();
-
-export default function RootLayout() {
+export default function AuthLayout() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check authentication state
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
-      SplashScreen.hideAsync();
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -36,20 +30,9 @@ export default function RootLayout() {
     );
   }
 
-  // Instead of conditionally rendering Stack.Screen, use Redirect
-  return (
-    <View style={{flex: 1}}>
-      <SafeScreen>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(dashboard)" />
-      </Stack>
+  if (session) {
+    return <Redirect href="/(dashboard)/home" />;
+  }
 
-      {/* Redirect based on session */}
-      {!session ? <Redirect href="/(auth)" /> : <Redirect href="/(dashboard)/home" />}
-
-      <StatusBar style="dark" />
-    </SafeScreen>
-    </View>
-  );
+  return <Stack screenOptions={{ headerShown: false }} />;
 }
